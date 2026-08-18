@@ -34,7 +34,9 @@ dsh plugin --profile web install
 
 ## 配置
 
-插件注册了 `dsh-turn-nav` 设置命名空间。修改 `$DSH_HOME/settings.yaml`（或 `settings.json`）即可覆盖默认值：
+最直接的修改方式是编辑仓库/插件包根目录下的 **`dsh-turn-nav.config.json`**。插件启动时会读取它作为 base 层；如果文件不存在，则使用内置默认值。
+
+如需按部署覆盖，插件也注册了 `dsh-turn-nav` 设置命名空间。修改 `$DSH_HOME/settings.yaml`（或 `settings.json`）即可覆盖默认值：
 
 ```yaml
 dsh-turn-nav:
@@ -82,7 +84,8 @@ dshTurnNav.resetConfig()
 ## 目录结构
 
 - `lib/client.js` — 预构建的浏览器插件包（已提交，可直接使用）。
-- `lib/index.js` — node half，注册 `dsh-turn-nav` 设置命名空间。
+- `lib/index.js` — node half，注册 `dsh-turn-nav` 设置命名空间并读取根目录配置文件。
+- `dsh-turn-nav.config.json` — 根目录默认配置，可直接编辑。
 - `src/` — 源代码，供参考。
 
 ## AI 制作提示

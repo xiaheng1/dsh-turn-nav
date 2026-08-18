@@ -1,0 +1,17 @@
+{
+  "barWidth": 12,
+  "focusedBarWidth": 24,
+  "adjacentBarWidth": 16,
+  "neighborBarWidth": 13,
+  "waveTransitionMs": 100,
+  "previewEnabled": true,
+  "previewWidth": 240,
+  "previewMaxHeight": 132,
+  "minTurns": 1,
+  "hideOnNarrow": true,
+  "railOffsetRight": 8,
+  "previewGap": 10,
+  "itemWidth": 28,
+  "itemHeight": 14,
+  "scrollOffset": 16
+}

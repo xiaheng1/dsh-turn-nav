@@ -18,6 +18,7 @@
     "src",
     "README.md",
     "README.zh.md",
+    "dsh-turn-nav.config.json",
     "LICENSE",
     "cordis.patch.yml"
   ],

@@ -1,17 +1,23 @@
+/// <reference types="node" />
 /**
  * Node-half settings registration for dsh-turn-nav.
  *
  * Registers the plugin's configuration namespace with DSH's user-settings
- * document (`settings.yaml` / `settings.json`). Defaults live in the schema,
- * so an absent section behaves exactly like the pre-configuration 4.3 build.
+ * document (`settings.yaml` / `settings.json`). The repository-root
+ * `dsh-turn-nav.config.json` is loaded as the composition `base` layer, so it
+ * is the obvious place to change plugin defaults; DSH user settings still win
+ * over it when both are present.
  */
 
+import { existsSync, readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import type { Context } from '@deepseek-ai/cordis'
 import Schema from '@deepseek-ai/schemastery'
 import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import {
   DEFAULT_TURN_NAV_CONFIG,
   TURN_NAV_NAMESPACE,
+  resolveTurnNavConfig,
   type TurnNavConfig,
 } from './config.ts'
 
@@ -34,15 +40,31 @@ export const TurnNavConfigSchema: Schema<TurnNavConfig> = Schema.object({
   scrollOffset: Schema.number().min(0).max(240).default(DEFAULT_TURN_NAV_CONFIG.scrollOffset),
 })
 
+/** Load the repository-root config file as the settings composition base. */
+function loadConfigFile(): Partial<TurnNavConfig> | undefined {
+  const configUrl = new URL('../dsh-turn-nav.config.json', import.meta.url)
+  const configPath = fileURLToPath(configUrl)
+  if (!existsSync(configPath)) return undefined
+  try {
+    const raw: unknown = JSON.parse(readFileSync(configPath, 'utf8'))
+    return resolveTurnNavConfig(raw)
+  } catch (error) {
+    console.warn(`[dsh-turn-nav] failed to read ${configPath}; using built-in defaults.`, error)
+    return undefined
+  }
+}
+
 /**
  * Register the namespace when a settings provider exists.
  * @param ctx - host context.
  */
 export function apply(ctx: Context): void {
+  const base = loadConfigFile()
   ctx.inject(['settings'], (settingsCtx) => {
     settingsCtx.settings.register(
       settingsNamespace(TURN_NAV_NAMESPACE),
       TurnNavConfigSchema,
+      base === undefined ? undefined : { base },
     )
   })
 }

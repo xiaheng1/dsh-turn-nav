@@ -34,7 +34,9 @@ The rail hides on narrow screens (`max-width: 767px`) by default; set `hideOnNar
 
 ## Configuration
 
-The plugin registers a `dsh-turn-nav` settings namespace. Edit `$DSH_HOME/settings.yaml` (or `settings.json`) to override defaults:
+The quickest way to change defaults is to edit **`dsh-turn-nav.config.json`** in the repository/package root. The plugin reads it at startup as the base layer; if the file is missing, built-in defaults are used.
+
+For per-deployment overrides, the plugin also registers a `dsh-turn-nav` settings namespace. Edit `$DSH_HOME/settings.yaml` (or `settings.json`) to override defaults:
 
 ```yaml
 dsh-turn-nav:
@@ -82,7 +84,8 @@ If a field is not configured, the default is used. The defaults keep the origina
 ## Package layout
 
 - `lib/client.js` — prebuilt browser plugin bundle (committed for direct use).
-- `lib/index.js` — node half; registers the `dsh-turn-nav` settings namespace.
+- `lib/index.js` — node half; registers the `dsh-turn-nav` settings namespace and reads the root config file.
+- `dsh-turn-nav.config.json` — root-level defaults you can edit directly.
 - `src/` — source code for reference.
 
 ## AI-generated notice
