@@ -66,9 +66,9 @@
   transform-origin: right center;
   will-change: transform;
   transition:
-    transform 40ms ease-out,
-    opacity 40ms ease-out,
-    background 40ms ease-out;
+    transform 60ms ease-out,
+    opacity 60ms ease-out,
+    background 60ms ease-out;
 }
 
 /* CSS-only wave: hovered item longest, adjacent items progressively shorter.
