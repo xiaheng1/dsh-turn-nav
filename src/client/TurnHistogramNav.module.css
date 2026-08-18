@@ -62,30 +62,34 @@
   border-radius: 999px;
   background: var(--dsw-alias-label-tertiary);
   opacity: 0.55;
+  transform: scaleX(1);
+  transform-origin: right center;
+  will-change: transform;
   transition:
-    width 70ms ease,
-    opacity 70ms ease,
-    background 70ms ease;
+    transform 40ms ease-out,
+    opacity 40ms ease-out,
+    background 40ms ease-out;
 }
 
 /* CSS-only wave: hovered item longest, adjacent items progressively shorter.
-   The transition is short enough to follow pointer movement without lag. */
+   Uses transform scaleX instead of width so the browser can animate on the
+   compositor thread and keep the wave responsive while sweeping the rail. */
 .item:hover .bar,
 .item:focus-within .bar {
-  width: 26px;
+  transform: scaleX(2.1667); /* 26 / 12 */
   background: var(--dsw-alias-state-business-primary);
   opacity: 1;
 }
 
 .item:has(+ .item:hover) .bar,
 .item:hover + .item .bar {
-  width: 17px;
+  transform: scaleX(1.4167); /* 17 / 12 */
   opacity: 0.85;
 }
 
 .item:has(+ .item + .item:hover) .bar,
 .item:hover + .item + .item .bar {
-  width: 13px;
+  transform: scaleX(1.0833); /* 13 / 12 */
   opacity: 0.7;
 }
 
