@@ -4,7 +4,7 @@
  * Prerequisite: start Edge with a debugging port, open DSH Web, and open a
  * conversation that has at least one user turn:
  *
- *   msedge.exe --remote-debugging-port=9222 --user-data-dir=C:\dsh-turn-nav-edge
+ *   & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir=C:\dsh-turn-nav-edge
  *
  * Then run:
  *
@@ -17,8 +17,8 @@ import { chromium } from 'playwright'
 
 const CDP_URL = process.env.DSH_CDP_URL ?? 'http://127.0.0.1:9222'
 const OUT_DIR = process.env.DSH_FRAMES ?? 'demo-frames'
-const STEPS = Number(process.env.DSH_STEPS ?? 70)
-const HOLD_MS = Number(process.env.DSH_HOLD_MS ?? 24)
+const STEPS = Number(process.env.DSH_STEPS ?? 80)
+const HOLD_MS = Number(process.env.DSH_HOLD_MS ?? 30)
 const BACK_AND_FORTH = process.env.DSH_BACK_AND_FORTH !== '0'
 
 const browser = await chromium.connectOverCDP(CDP_URL)
@@ -43,29 +43,77 @@ mkdirSync(OUT_DIR, { recursive: true })
 
 const boxes = []
 for (const item of items) boxes.push(await item.boundingBox())
-const start = boxes[0]
-const end = boxes.at(-1)
-const y = (start.y + start.height / 2 + end.y + end.height / 2) / 2
-const x0 = start.x + start.width / 2
-const x1 = end.x + end.width / 2
+
+// The rail is vertical: sweep top -> bottom at the rail's center x.
+const first = boxes[0]
+const last = boxes.at(-1)
+const x = first.x + first.width / 2
+const y0 = first.y + first.height / 2
+const y1 = last.y + last.height / 2
+
+// Inject a visible fake cursor. Playwright screenshots do not include the OS
+// cursor, so this element stands in for it.
+await page.evaluate(() => {
+  if (document.getElementById('__dsh_rec_cursor') !== null) return
+  const cursor = document.createElement('div')
+  cursor.id = '__dsh_rec_cursor'
+  cursor.style.cssText = [
+    'position:fixed',
+    'left:0',
+    'top:0',
+    'width:18px',
+    'height:18px',
+    'border-radius:50%',
+    'background:#0a84ff',
+    'border:2px solid #ffffff',
+    'box-shadow:0 0 0 1px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.35)',
+    'z-index:2147483647',
+    'pointer-events:none',
+    'margin-left:-9px',
+    'margin-top:-9px',
+  ].join(';')
+  document.body.appendChild(cursor)
+})
+
+const moveCursor = async (cx, cy) => {
+  await page.mouse.move(cx, cy)
+  await page.evaluate(([px, py]) => {
+    const el = document.getElementById('__dsh_rec_cursor')
+    if (el !== null) el.style.transform = `translate(${px}px, ${py}px)`
+  }, [cx, cy])
+}
+
+// Crop to the rail + preview card region only, so the GIF stays compact.
+const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }))
+const previewWidth = 280
+const clipWidth = Math.min(viewport.width, Math.round(x + previewWidth))
+const margin = 24
+const clipTop = Math.max(0, Math.round(first.y - margin))
+const clipBottom = Math.min(viewport.height, Math.round(last.y + last.height + margin))
+const clip = {
+  x: Math.max(0, Math.round(x - previewWidth)),
+  y: clipTop,
+  width: clipWidth - Math.max(0, Math.round(x - previewWidth)),
+  height: clipBottom - clipTop,
+}
 
 let frame = 0
 const save = async () => {
-  await page.screenshot({ path: `${OUT_DIR}/${String(frame).padStart(4, '0')}.png` })
+  await page.screenshot({ path: `${OUT_DIR}/${String(frame).padStart(4, '0')}.png`, clip })
   frame += 1
 }
 
 // Initial state: no hover.
-await page.mouse.move(x0 - 200, y)
-await page.waitForTimeout(200)
+await moveCursor(x - 200, y0)
+await page.waitForTimeout(300)
 await save()
 
-// Smooth forward sweep.
+const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+
+// Smooth vertical sweep.
 for (let i = 0; i <= STEPS; i += 1) {
   const t = i / STEPS
-  // ease-in-out so the movement starts and ends gently
-  const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-  await page.mouse.move(x0 + (x1 - x0) * ease, y)
+  await moveCursor(x, y0 + (y1 - y0) * ease(t))
   await page.waitForTimeout(HOLD_MS)
   await save()
 }
@@ -74,8 +122,7 @@ for (let i = 0; i <= STEPS; i += 1) {
 if (BACK_AND_FORTH) {
   for (let i = STEPS; i >= 0; i -= 1) {
     const t = i / STEPS
-    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-    await page.mouse.move(x0 + (x1 - x0) * ease, y)
+    await moveCursor(x, y0 + (y1 - y0) * ease(t))
     await page.waitForTimeout(HOLD_MS)
     await save()
   }
