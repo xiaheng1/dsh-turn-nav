@@ -2,49 +2,44 @@
 
 > ⚠️ **AI 制作提示**：本插件由 AI 辅助生成。安装使用前请先在测试环境验证，确认交互与样式符合预期后再正式使用。
 
-Codex-style turn histogram navigation rail for DeepSeek Harness Web.
+Codex 风格的 DeepSeek Harness Web 对话轮次直方图导航轨。
 
-Unfocused turns render as short bars on the right edge of the conversation.
-Hovering or keyboard-focusing a bar grows it into a wave (the focused bar is
-longest) and shows a preview card with the message you sent in that turn.
-Clicking a bar smooth-scrolls the conversation to that turn.
+不聚焦时，每条用户消息在对话区右侧显示为一条短横条。鼠标悬停或键盘聚焦时，当前条变为最长，相邻条依次变短，形成波浪效果；同时会在左侧显示你发送的消息内容预览。点击任意条可平滑滚动到对应轮次。
 
-## Install
+## 安装
 
 ```powershell
-dsh plugin --profile web add git+https://github.com/<your-account>/dsh-turn-nav.git
+dsh plugin --profile web add git+https://github.com/xiaheng1/dsh-turn-nav.git
 dsh plugin --profile web install
 ```
 
-Then restart `dsh web` and hard-refresh the browser (`Ctrl+F5`).
+然后重启 `dsh web`，并在浏览器中强制刷新（`Ctrl+F5`）。
 
-For a local folder:
+本地文件夹安装：
 
 ```powershell
-dsh plugin --profile web add <absolute-path-to-this-folder>
+dsh plugin --profile web add <本机绝对路径>
 dsh plugin --profile web install
 ```
 
-## Usage
+## 使用
 
-1. Open a workspace and a conversation.
-2. Move the pointer over the right-edge rail: the bar under the pointer grows,
-   adjacent bars form a wave, and a preview card shows the message you sent in
-   that turn.
-3. Click a bar to smooth-scroll to that turn.
+1. 打开一个工作区并进入会话。
+2. 将鼠标移到右侧导航轨上：指针所在条变长，相邻条形成波浪，左侧出现该轮你发送的消息预览。
+3. 点击任意条，平滑滚动到对应轮次。
 
-The rail hides on narrow screens (`max-width: 767px`).
+窄屏（`max-width: 767px`）下自动隐藏。
 
-## Package layout
+## 目录结构
 
-- `lib/client.js` — prebuilt browser plugin bundle (committed for direct use).
-- `lib/index.js` — node half (empty `apply` stub).
-- `src/` — source code for reference.
-
-## License
-
-MIT
+- `lib/client.js` — 预构建的浏览器插件包（已提交，可直接使用）。
+- `lib/index.js` — node half（空的 `apply` 占位）。
+- `src/` — 源代码，供参考。
 
 ## AI 制作提示
 
 本插件由 AI 辅助生成。源码与预构建产物仅供学习与测试；在正式环境中使用前，请自行审查源码、测试功能，并确认其行为符合你的预期。
+
+## License
+
+MIT
