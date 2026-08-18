@@ -58,8 +58,25 @@ const last = boxes.at(-1)
 const x = first.x + first.width / 2
 const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }))
 
-const yBottom = viewport.height - 2
-const yTop = 2
+// Wide shot = the conversation column, not the whole browser window.
+const conv = await page.locator('[data-conversation-scroll]').evaluateAll(els => {
+  for (const el of els) {
+    const r = el.getBoundingClientRect()
+    if (r.width > 200 && r.height > 200) {
+      return { x: r.x, y: r.y, width: r.width, height: r.height }
+    }
+  }
+  return { x: 0, y: 0, width: innerWidth, height: innerHeight }
+})
+const convClip = {
+  x: Math.round(conv.x),
+  y: Math.round(conv.y),
+  width: Math.round(conv.width),
+  height: Math.round(conv.height),
+}
+
+const yBottom = convClip.y + convClip.height - 2
+const yTop = convClip.y + 2
 const targetIndex = Math.floor(boxes.length / 2)
 const target = boxes[targetIndex]
 const targetX = target.x + target.width / 2
@@ -74,7 +91,7 @@ const railClip = {
   width: Math.min(viewport.width, Math.round(x + 40)) - Math.max(0, Math.round(x - previewSpace)),
   height: Math.min(viewport.height, Math.round(last.y + last.height + margin)) - Math.max(0, Math.round(first.y - margin)),
 }
-const fullClip = { x: 0, y: 0, width: viewport.width, height: viewport.height }
+const fullClip = convClip
 
 const mixClip = (a, b, t) => ({
   x: Math.round(a.x + (b.x - a.x) * t),
