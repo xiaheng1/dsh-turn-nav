@@ -6,7 +6,7 @@ English | [中文](README.zh.md)
 
 Codex-style turn histogram navigation rail for DeepSeek Harness Web.
 
-Unfocused turns render as short bars on the right edge of the conversation. Hovering or keyboard-focusing a bar grows it into a wave (the focused bar is longest) and shows a preview card with the message you sent in that turn. To avoid flicker while sweeping along the rail, the pointer must stay on a bar for a short moment (300ms) before its preview appears. Clicking a bar smooth-scrolls the conversation to that turn.
+Unfocused turns render as short bars on the right edge of the conversation. Hovering or keyboard-focusing a bar grows it into a wave (the focused bar is longest) and shows a preview card with the message you sent in that turn. While sweeping along the rail, the preview card stays visible and smoothly slides to the active bar, showing that turn's message text. Clicking a bar smooth-scrolls the conversation to that turn.
 
 ## Install
 
@@ -27,7 +27,7 @@ dsh plugin --profile web install
 ## Usage
 
 1. Open a workspace and a conversation.
-2. Move the pointer over the right-edge rail: the bar under the pointer grows, adjacent bars form a wave, and a preview card shows the message you sent in that turn.
+2. Move the pointer over the right-edge rail: the bar under the pointer grows, adjacent bars form a wave, and a shared preview card smoothly slides to the active bar showing that turn's message.
 3. Click a bar to smooth-scroll to that turn.
 
 The rail hides on narrow screens (`max-width: 767px`).

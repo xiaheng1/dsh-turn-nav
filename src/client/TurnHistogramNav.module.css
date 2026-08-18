@@ -90,10 +90,12 @@
 }
 
 
-/* Hover/focus preview card: appears to the left of the rail. */
+/* Single shared preview card: slides vertically to follow the active item.
+   It stays mounted while the pointer is on the rail, so moving between items
+   smoothly transitions position and swaps the text instead of flickering. */
 .preview {
   position: absolute;
-  top: 50%;
+  top: 0;
   right: calc(100% + 10px);
   transform: translateY(-50%);
   width: 240px;
@@ -112,10 +114,12 @@
   overflow-wrap: anywhere;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 120ms ease;
+  transition:
+    top 120ms ease,
+    opacity 80ms ease;
 }
 
-.item.active .preview {
+.preview.visible {
   opacity: 1;
 }
 
