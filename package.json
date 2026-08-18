@@ -1,0 +1,42 @@
+{
+  "name": "dsh-turn-nav",
+  "version": "0.1.0",
+  "description": "Codex-style turn histogram navigation rail for DeepSeek Harness Web. Hover shows a wave of bars and a preview of your message; click jumps to that turn.",
+  "type": "module",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "turn-navigation",
+    "histogram",
+    "conversation-ui"
+  ],
+  "license": "MIT",
+  "author": "DSH Turn Nav Contributors",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "react": "^18.2.0"
+  }
+}
