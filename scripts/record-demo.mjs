@@ -118,34 +118,36 @@ const save = async (clip) => {
 
 const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
-// 1) Close-up on the rail.
+// 1) Brief close-up on the rail before the sweep.
 for (let i = 0; i < Math.max(1, Math.round(ZOOM_HOLD_MS / HOLD_MS)); i += 1) {
   await page.waitForTimeout(HOLD_MS)
   await save(railClip)
 }
 
-// 2) Zoom out to the full page.
-for (let i = 0; i <= ZOOM_STEPS; i += 1) {
-  await page.waitForTimeout(HOLD_MS)
-  await save(mixClip(railClip, fullClip, i / ZOOM_STEPS))
-}
-
-// 3) One bottom-to-top sweep across the rail (no fake cursor).
-await page.mouse.move(x, yBottom)
+// 2) One bottom-to-top sweep across the rail, captured in close-up.
+const closeYBottom = railClip.y + railClip.height - 2
+const closeYTop = railClip.y + 2
+await page.mouse.move(x, closeYBottom)
 await page.waitForTimeout(200)
-await save(fullClip)
+await save(railClip)
 for (let i = 0; i <= STEPS; i += 1) {
   const t = i / STEPS
-  await page.mouse.move(x, yBottom + (yTop - yBottom) * ease(t))
+  await page.mouse.move(x, closeYBottom + (closeYTop - closeYBottom) * ease(t))
   await page.waitForTimeout(HOLD_MS)
-  await save(fullClip)
+  await save(railClip)
 }
 
-// 4) Move to the chosen turn item and hold.
+// 3) Move to the chosen turn item and hold, still in close-up.
 await page.mouse.move(targetX, targetY)
 for (let i = 0; i < Math.max(1, Math.round(HOVER_PAUSE_MS / HOLD_MS)); i += 1) {
   await page.waitForTimeout(HOLD_MS)
-  await save(fullClip)
+  await save(railClip)
+}
+
+// 4) Zoom out to the conversation-wide shot while hovering the target.
+for (let i = 0; i <= ZOOM_STEPS; i += 1) {
+  await page.waitForTimeout(HOLD_MS)
+  await save(mixClip(railClip, fullClip, i / ZOOM_STEPS))
 }
 
 // 5) Click and record the jump.
