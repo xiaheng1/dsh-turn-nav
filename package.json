@@ -10,6 +10,7 @@
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
   "files": [
@@ -17,7 +18,8 @@
     "src",
     "README.md",
     "README.zh.md",
-    "LICENSE"
+    "LICENSE",
+    "cordis.patch.yml"
   ],
   "keywords": [
     "dsh-plugin",
@@ -29,6 +31,9 @@
   "license": "MIT",
   "author": "DSH Turn Nav Contributors",
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "inject": [
         "@deepseek-ai/dsh-client-ui-conversation"

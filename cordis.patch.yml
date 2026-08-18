@@ -1,0 +1,8 @@
+# dsh-turn-nav profile bundle patch.
+# Applied when this package appears in a profile's `dsh.profile.bundles` list.
+# The browser half is discovered automatically through the package.json
+# `dsh.client` declaration (served at /plugins/dsh-turn-nav/client.js).
+
+- insert:
+    - id: turn-nav
+      name: dsh-turn-nav
