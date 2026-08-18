@@ -52,5 +52,12 @@
   "homepage": "https://github.com/xiaheng1/dsh-turn-nav#readme",
   "bugs": {
     "url": "https://github.com/xiaheng1/dsh-turn-nav/issues"
+  },
+  "scripts": {
+    "record:demo": "node scripts/record-demo.mjs",
+    "make:gif": "python scripts/make-gif.py demo-frames demo.gif --duration 30"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
   }
 }
