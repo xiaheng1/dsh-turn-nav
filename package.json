@@ -16,6 +16,7 @@
     "lib",
     "src",
     "README.md",
+    "README.zh.md",
     "LICENSE"
   ],
   "keywords": [
