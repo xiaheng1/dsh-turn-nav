@@ -2,11 +2,11 @@
  * Record a turn-nav demo GIF.
  *
  * Sequence:
- *   1. Mouse starts near the bottom edge, outside the rail.
- *   2. Sweeps upward across the rail to the top edge (no visible fake cursor).
- *   3. Moves to one chosen turn item and holds there for 1s, showing the
- *      wave + preview.
- *   4. Clicks that item and records the conversation jumping to the turn.
+ *   1. Start with a close-up of the rail, then zoom out to the full page.
+ *   2. Mouse sweeps once from the bottom edge to the top edge across the rail.
+ *      No fake cursor is injected.
+ *   3. Move to one chosen turn item and hold there, showing wave + preview.
+ *   4. Click that item and record the conversation jumping to the turn.
  *
  * Prerequisite:
  *   & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir=C:\dsh-turn-nav-edge
@@ -23,10 +23,12 @@ import { chromium } from 'playwright'
 
 const CDP_URL = process.env.DSH_CDP_URL ?? 'http://127.0.0.1:9222'
 const OUT_DIR = process.env.DSH_FRAMES ?? 'demo-frames'
-const STEPS = Number(process.env.DSH_STEPS ?? 80)
-const HOLD_MS = Number(process.env.DSH_HOLD_MS ?? 30)
-const HOVER_PAUSE_MS = Number(process.env.DSH_HOVER_PAUSE_MS ?? 1000)
-const JUMP_MS = Number(process.env.DSH_JUMP_MS ?? 1800)
+const STEPS = Number(process.env.DSH_STEPS ?? 140)          // sweep frames; higher = slower
+const HOLD_MS = Number(process.env.DSH_HOLD_MS ?? 50)       // ms per captured frame
+const HOVER_PAUSE_MS = Number(process.env.DSH_HOVER_PAUSE_MS ?? 1500)
+const JUMP_MS = Number(process.env.DSH_JUMP_MS ?? 2000)
+const ZOOM_HOLD_MS = Number(process.env.DSH_ZOOM_HOLD_MS ?? 800)
+const ZOOM_STEPS = Number(process.env.DSH_ZOOM_STEPS ?? 30)
 
 const browser = await chromium.connectOverCDP(CDP_URL)
 const context = browser.contexts()[0]
@@ -54,54 +56,76 @@ for (const item of items) boxes.push(await item.boundingBox())
 const first = boxes[0]
 const last = boxes.at(-1)
 const x = first.x + first.width / 2
-
-// Use viewport edges so the sweep visually enters from the bottom and exits
-// at the top. Screenshots are full-viewport, so the whole page stays visible
-// and the final click/jump reads clearly.
 const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }))
+
 const yBottom = viewport.height - 2
 const yTop = 2
-
 const targetIndex = Math.floor(boxes.length / 2)
 const target = boxes[targetIndex]
 const targetX = target.x + target.width / 2
 const targetY = target.y + target.height / 2
 
+// Close-up clip around the rail and its preview card.
+const margin = 24
+const previewSpace = 280
+const railClip = {
+  x: Math.max(0, Math.round(x - previewSpace)),
+  y: Math.max(0, Math.round(first.y - margin)),
+  width: Math.min(viewport.width, Math.round(x + 40)) - Math.max(0, Math.round(x - previewSpace)),
+  height: Math.min(viewport.height, Math.round(last.y + last.height + margin)) - Math.max(0, Math.round(first.y - margin)),
+}
+const fullClip = { x: 0, y: 0, width: viewport.width, height: viewport.height }
+
+const mixClip = (a, b, t) => ({
+  x: Math.round(a.x + (b.x - a.x) * t),
+  y: Math.round(a.y + (b.y - a.y) * t),
+  width: Math.round(a.width + (b.width - a.width) * t),
+  height: Math.round(a.height + (b.height - a.height) * t),
+})
+
 let frame = 0
-const save = async () => {
-  await page.screenshot({ path: `${OUT_DIR}/${String(frame).padStart(4, '0')}.png` })
+const save = async (clip) => {
+  await page.screenshot({ path: `${OUT_DIR}/${String(frame).padStart(4, '0')}.png`, clip })
   frame += 1
 }
 
 const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
-// 1) Start near the bottom edge.
+// 1) Close-up on the rail.
+for (let i = 0; i < Math.max(1, Math.round(ZOOM_HOLD_MS / HOLD_MS)); i += 1) {
+  await page.waitForTimeout(HOLD_MS)
+  await save(railClip)
+}
+
+// 2) Zoom out to the full page.
+for (let i = 0; i <= ZOOM_STEPS; i += 1) {
+  await page.waitForTimeout(HOLD_MS)
+  await save(mixClip(railClip, fullClip, i / ZOOM_STEPS))
+}
+
+// 3) One bottom-to-top sweep across the rail (no fake cursor).
 await page.mouse.move(x, yBottom)
 await page.waitForTimeout(200)
-await save()
-
-// 2) One bottom-to-top sweep across the rail.
+await save(fullClip)
 for (let i = 0; i <= STEPS; i += 1) {
   const t = i / STEPS
   await page.mouse.move(x, yBottom + (yTop - yBottom) * ease(t))
   await page.waitForTimeout(HOLD_MS)
-  await save()
+  await save(fullClip)
 }
 
-// 3) Move to the chosen turn item and hold, showing wave + preview.
+// 4) Move to the chosen turn item and hold.
 await page.mouse.move(targetX, targetY)
-const paused = Math.max(1, Math.round(HOVER_PAUSE_MS / HOLD_MS))
-for (let i = 0; i < paused; i += 1) {
+for (let i = 0; i < Math.max(1, Math.round(HOVER_PAUSE_MS / HOLD_MS)); i += 1) {
   await page.waitForTimeout(HOLD_MS)
-  await save()
+  await save(fullClip)
 }
 
-// 4) Click the item and record the jump.
+// 5) Click and record the jump.
 await page.mouse.click(targetX, targetY)
-const jumpFrames = Math.max(1, Math.round(JUMP_MS / HOLD_MS))
-for (let i = 0; i < jumpFrames; i += 1) {
+for (let i = 0; i < Math.max(1, Math.round(JUMP_MS / HOLD_MS)); i += 1) {
   await page.waitForTimeout(HOLD_MS)
-  await save()
+  await save(fullClip)
 }
 
 console.log(`Captured ${frame} frames in ${OUT_DIR}/`)
