@@ -1,0 +1,14 @@
+---
+description: dsh-turn-nav project rules
+globs: **/*
+alwaysApply: true
+---
+
+# dsh-turn-nav Project Rules
+
+- 源码在 `src/client/`，`lib/client.js` 是同步维护的浏览器 bundle。
+- 不修改 DeepSeek-Harness 官方源码，插件通过 `conversation.composer.dock` slot 挂载。
+- `lib/client.js` 中的 loader id / style tag id 必须保持 `dsh-turn-nav`。
+- 用户可见变化需同步更新 `README.md`、`README.zh.md`、`CHANGELOG.md`。
+- 提交前运行 `node --check lib/client.js` 和 `npm pack --dry-run`。
+- 与用户交流使用中文。
