@@ -82,14 +82,24 @@ const target = boxes[targetIndex]
 const targetX = target.x + target.width / 2
 const targetY = target.y + target.height / 2
 
-// Close-up clip around the rail and its preview card.
-const margin = 24
-const previewSpace = 280
+// Close-up clip with the SAME aspect ratio as the wide shot, so every frame
+// can be resized to one GIF canvas without distortion.
+const aspect = convClip.width / convClip.height
+const closeHeight = Math.min(convClip.height, 420)
+const closeWidth = Math.round(closeHeight * aspect)
+const railCenterX = x
+const railCenterY = (first.y + first.height / 2 + last.y + last.height / 2) / 2
+const closeRight = Math.min(viewport.width, Math.round(railCenterX + closeWidth / 2))
+const closeLeft = closeRight - closeWidth
+const closeTop = Math.min(
+  Math.max(0, Math.round(railCenterY - closeHeight / 2)),
+  viewport.height - closeHeight,
+)
 const railClip = {
-  x: Math.max(0, Math.round(x - previewSpace)),
-  y: Math.max(0, Math.round(first.y - margin)),
-  width: Math.min(viewport.width, Math.round(x + 40)) - Math.max(0, Math.round(x - previewSpace)),
-  height: Math.min(viewport.height, Math.round(last.y + last.height + margin)) - Math.max(0, Math.round(first.y - margin)),
+  x: Math.max(0, closeLeft),
+  y: Math.max(0, closeTop),
+  width: closeWidth,
+  height: closeHeight,
 }
 const fullClip = convClip
 
