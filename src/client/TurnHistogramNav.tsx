@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: activates ui-conversation's SlotMap declaration for the dock slot.
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
@@ -10,6 +10,9 @@ interface TurnNavItem {
   readonly key: string
   readonly preview: string
 }
+
+/** How long the pointer must stay on a nav item before its preview appears. */
+const PREVIEW_DELAY_MS = 300
 
 /** Extract a plain-text preview from a user/steering message node. */
 function previewOf(node: { content?: readonly { type?: string; text?: string }[] } | undefined): string {
@@ -48,6 +51,50 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
   // TODO: restore the spec threshold (>=2) after the trial.
   if (turns.length < 1) return null
 
+  const [activeKey, setActiveKey] = useState<string | null>(null)
+  const [focusedKey, setFocusedKey] = useState<string | null>(null)
+  const hoverTimerRef = useRef<number | undefined>(undefined)
+
+  const clearHoverTimer = (): void => {
+    if (hoverTimerRef.current !== undefined) {
+      window.clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = undefined
+    }
+  }
+
+  const scheduleMousePreview = (key: string): void => {
+    // While keyboard focus is held on another item, do not let a quick mouse
+    // pass change the preview shown by the keyboard.
+    if (focusedKey !== null && focusedKey !== key) return
+    clearHoverTimer()
+    hoverTimerRef.current = window.setTimeout(() => {
+      setActiveKey(key)
+      hoverTimerRef.current = undefined
+    }, PREVIEW_DELAY_MS)
+  }
+
+  const cancelMousePreview = (): void => {
+    clearHoverTimer()
+    // Keep the preview when keyboard focus is still on the item.
+    if (focusedKey === null) setActiveKey(null)
+  }
+
+  const handleFocus = (key: string): void => {
+    setFocusedKey(key)
+    clearHoverTimer()
+    setActiveKey(key)
+  }
+
+  const handleBlur = (): void => {
+    setFocusedKey(null)
+    clearHoverTimer()
+    setActiveKey(null)
+  }
+
+  useEffect(() => () => {
+    clearHoverTimer()
+  }, [])
+
   const scrollToTurn = (key: string): void => {
     const rows = document.querySelectorAll<HTMLElement>('[data-chat-anchor-key]')
     for (const row of rows) {
@@ -69,7 +116,15 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
     <div className={css.host}>
       <nav className={css.rail} aria-label="对话轮次导航">
         {turns.map((turn, index) => (
-          <div key={turn.key} className={css.item} data-turn-nav-key={turn.key}>
+          <div
+            key={turn.key}
+            className={activeKey === turn.key ? `${css.item} ${css.active}` : css.item}
+            data-turn-nav-key={turn.key}
+            onMouseEnter={() => { scheduleMousePreview(turn.key) }}
+            onMouseLeave={cancelMousePreview}
+            onFocus={() => { handleFocus(turn.key) }}
+            onBlur={handleBlur}
+          >
             <button
               type="button"
               className={css.lineButton}
