@@ -55,7 +55,8 @@
   },
   "scripts": {
     "record:demo": "node scripts/record-demo.mjs",
-    "make:gif": "python scripts/make-gif.py demo-frames demo.gif --duration 30"
+    "make:gif": "python scripts/make-gif.py demo-frames demo.gif --duration 30",
+    "demo:mouse": "python scripts/mouse-demo.py"
   },
   "devDependencies": {
     "playwright": "^1.61.1"
