@@ -56,6 +56,10 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
   }
 
   const hidePreview = (): void => {
+    // Keep the preview while keyboard focus is still inside the rail, even if
+    // the pointer has left it.
+    const activeElement = document.activeElement
+    if (activeElement instanceof HTMLElement && activeElement.closest('[data-turn-nav-key]') !== null) return
     setActiveKey(null)
   }
 
