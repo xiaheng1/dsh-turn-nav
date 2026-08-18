@@ -47,6 +47,7 @@ git pull origin main
    - 插件必须作为项目/工作区的一个可解析依赖存在，由项目包管理器安装。
 
 2. **项目用 pnpm，就始终用 pnpm**
+   - 本仓库 `package.json` 已声明 `"packageManager": "pnpm@11.21.0"`，请勿改用 npm 安装。
    - 在 pnpm workspace 中不要混用 `npm install`。
    - 公共依赖在根目录用：
      ```powershell
