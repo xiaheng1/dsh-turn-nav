@@ -23,6 +23,7 @@ import {
 
 /** Schemastery schema used by DSH settings to validate and render the section. */
 export const TurnNavConfigSchema: Schema<TurnNavConfig> = Schema.object({
+  variant: Schema.union(['mixed', 'deepseek', 'codex']).default(DEFAULT_TURN_NAV_CONFIG.variant),
   barWidth: Schema.number().min(4).max(40).default(DEFAULT_TURN_NAV_CONFIG.barWidth),
   focusedBarWidth: Schema.number().min(4).max(80).default(DEFAULT_TURN_NAV_CONFIG.focusedBarWidth),
   adjacentBarWidth: Schema.number().min(4).max(80).default(DEFAULT_TURN_NAV_CONFIG.adjacentBarWidth),
@@ -37,6 +38,7 @@ export const TurnNavConfigSchema: Schema<TurnNavConfig> = Schema.object({
   previewGap: Schema.number().min(0).max(120).default(DEFAULT_TURN_NAV_CONFIG.previewGap),
   itemWidth: Schema.number().min(12).max(120).default(DEFAULT_TURN_NAV_CONFIG.itemWidth),
   itemHeight: Schema.number().min(8).max(64).default(DEFAULT_TURN_NAV_CONFIG.itemHeight),
+  dotSize: Schema.number().min(4).max(32).default(DEFAULT_TURN_NAV_CONFIG.dotSize),
   scrollOffset: Schema.number().min(0).max(240).default(DEFAULT_TURN_NAV_CONFIG.scrollOffset),
 })
 

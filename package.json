@@ -1,6 +1,6 @@
 {
   "name": "dsh-turn-nav",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "packageManager": "pnpm@11.21.0",
   "description": "Codex-style turn histogram navigation rail for DeepSeek Harness Web. Hover shows a wave of bars and a preview of your message; click jumps to that turn. Visual behavior is configurable through DSH settings.",
   "type": "module",

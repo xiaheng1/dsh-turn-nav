@@ -91,6 +91,35 @@
   opacity: 0.7;
 }
 
+/* Codex-style dots: no wave chain, only a single dot highlight. */
+.dot {
+  width: var(--turn-nav-dot-size, 8px);
+  height: var(--turn-nav-dot-size, 8px);
+  border-radius: 50%;
+  opacity: 0.85;
+  transition:
+    transform var(--turn-nav-wave-transition, 100ms) ease-out,
+    opacity var(--turn-nav-wave-transition, 100ms) ease-out;
+}
+
+.item:hover .dot,
+.item:focus-within .dot {
+  transform: scale(1.2);
+  opacity: 1;
+}
+
+/* DeepSeek-style variant: keep the same dash language but slightly thinner
+   and more transparent at rest for a softer histogram feel. */
+.host[data-variant="deepseek"] .bar {
+  height: 3px;
+  opacity: 0.45;
+}
+
+.host[data-variant="deepseek"] .item:hover .bar,
+.host[data-variant="deepseek"] .item:focus-within .bar {
+  opacity: 1;
+}
+
 /* Single shared preview card: slides vertically to follow the active item.
    It stays mounted while the pointer is on the rail, so moving between items
    smoothly transitions position and swaps the text instead of flickering. */

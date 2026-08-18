@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- Added `variant` configuration: `mixed` (current default), `deepseek`, and `codex`.
+- `mixed` keeps the current visual behavior exactly; `deepseek` is a softer dash variant; `codex` uses semantic dots without the wave.
+- Added `dotSize` for Codex-style dot diameter.
+
 ## 0.2.0
 
 - Configuration support: the plugin now exposes a `dsh-turn-nav` DSH settings namespace.

@@ -61,10 +61,21 @@ dshTurnNav.resetConfig()
 
 未配置的字段使用默认值。默认值保持原有短条质感，同时让聚焦波浪更柔和、更圆润。
 
+### 变体
+
+通过 `variant` 切换视觉风格：
+
+| 变体 | 说明 |
+| --- | --- |
+| `mixed` | 当前默认：短条 + 宽度波浪 + 共享预览卡片。 |
+| `deepseek` | 延续短条语言，静止时更细、更淡。 |
+| `codex` | 语义化圆点，无波浪；悬停时单点高亮。 |
+
 ### 配置参数
 
 | 参数 | 默认值 | 说明 |
 | --- | ---: | --- |
+| `variant` | `mixed` | 视觉风格：`mixed`、`deepseek` 或 `codex`。 |
 | `barWidth` | `12` | 未聚焦条宽（px）。 |
 | `focusedBarWidth` | `24` | 悬停/聚焦条宽（px）。 |
 | `adjacentBarWidth` | `16` | 第一相邻条宽（px）。 |
@@ -79,6 +90,7 @@ dshTurnNav.resetConfig()
 | `previewGap` | `10` | 导航轨与预览卡片间距（px）。 |
 | `itemWidth` | `28` | 点击目标/条目宽度（px）。 |
 | `itemHeight` | `14` | 条目高度（px）。 |
+| `dotSize` | `8` | Codex 变体圆点直径（px）。 |
 | `scrollOffset` | `16` | 点击跳转时的额外滚动偏移（px）。 |
 
 ## 目录结构

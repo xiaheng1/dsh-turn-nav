@@ -9,9 +9,14 @@
 /** DSH settings namespace owned by this plugin. */
 export const TURN_NAV_NAMESPACE = 'dsh-turn-nav'
 
+/** Visual variant of the turn navigation rail. */
+export type TurnNavVariant = 'mixed' | 'deepseek' | 'codex'
+
 /** Effective visual/behavior settings for the turn navigation rail. */
 export interface TurnNavConfig {
-  /** Resting bar width in px. */
+  /** Visual variant: current mixed style, DeepSeek dash style, or Codex dot style. */
+  variant: TurnNavVariant
+  /** Resting bar width in px (also used as Codex dot size when variant is codex). */
   barWidth: number
   /** Focused (hovered/focused) bar width in px. */
   focusedBarWidth: number
@@ -43,12 +48,15 @@ export interface TurnNavConfig {
   itemWidth: number
   /** Item height in px. */
   itemHeight: number
+  /** Codex variant dot diameter in px. */
+  dotSize: number
   /** Extra scroll offset when jumping to a turn in px. */
   scrollOffset: number
 }
 
 /** Defaults keep the original bar feel while making the focused wave softer and rounder. */
 export const DEFAULT_TURN_NAV_CONFIG: TurnNavConfig = {
+  variant: 'mixed',
   barWidth: 12,
   focusedBarWidth: 24,
   adjacentBarWidth: 16,
@@ -63,6 +71,7 @@ export const DEFAULT_TURN_NAV_CONFIG: TurnNavConfig = {
   previewGap: 10,
   itemWidth: 28,
   itemHeight: 14,
+  dotSize: 8,
   scrollOffset: 16,
 }
 
@@ -86,6 +95,7 @@ export function resolveTurnNavConfig(input: unknown): TurnNavConfig {
   const raw = (typeof input === 'object' && input !== null ? input : {}) as Partial<Record<keyof TurnNavConfig, unknown>>
   const defaults = DEFAULT_TURN_NAV_CONFIG
   return {
+    variant: raw.variant === 'deepseek' || raw.variant === 'codex' ? raw.variant : 'mixed',
     barWidth: clampNumber(raw.barWidth, defaults.barWidth, 4, 40),
     focusedBarWidth: clampNumber(raw.focusedBarWidth, defaults.focusedBarWidth, 4, 80),
     adjacentBarWidth: clampNumber(raw.adjacentBarWidth, defaults.adjacentBarWidth, 4, 80),
@@ -100,6 +110,7 @@ export function resolveTurnNavConfig(input: unknown): TurnNavConfig {
     previewGap: clampNumber(raw.previewGap, defaults.previewGap, 0, 120),
     itemWidth: clampNumber(raw.itemWidth, defaults.itemWidth, 12, 120),
     itemHeight: clampNumber(raw.itemHeight, defaults.itemHeight, 8, 64),
+    dotSize: clampNumber(raw.dotSize, defaults.dotSize, 4, 32),
     scrollOffset: clampNumber(raw.scrollOffset, defaults.scrollOffset, 0, 240),
   }
 }

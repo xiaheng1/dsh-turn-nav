@@ -1,4 +1,5 @@
 {
+  "variant": "mixed",
   "barWidth": 12,
   "focusedBarWidth": 24,
   "adjacentBarWidth": 16,
@@ -13,5 +14,6 @@
   "previewGap": 10,
   "itemWidth": 28,
   "itemHeight": 14,
+  "dotSize": 8,
   "scrollOffset": 16
 }

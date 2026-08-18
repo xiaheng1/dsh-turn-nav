@@ -61,10 +61,21 @@ dshTurnNav.resetConfig()
 
 If a field is not configured, the default is used. The defaults keep the original short-bar feel while making the focused wave softer and rounder.
 
+### Variants
+
+Set `variant` to choose the visual style:
+
+| Variant | Description |
+| --- | --- |
+| `mixed` | Current default: short bars with a width-based wave and shared preview card. |
+| `deepseek` | Same dash language, slightly thinner and softer at rest. |
+| `codex` | Semantic dots without the wave; each dot highlights individually on hover. |
+
 ### Configuration parameters
 
 | Parameter | Default | Description |
 | --- | ---: | --- |
+| `variant` | `mixed` | Visual style: `mixed`, `deepseek`, or `codex`. |
 | `barWidth` | `12` | Resting bar width in px. |
 | `focusedBarWidth` | `24` | Hovered / focused bar width in px. |
 | `adjacentBarWidth` | `16` | First adjacent bar width in px. |
@@ -79,6 +90,7 @@ If a field is not configured, the default is used. The defaults keep the origina
 | `previewGap` | `10` | Gap between the rail and the preview card in px. |
 | `itemWidth` | `28` | Click target / item width in px. |
 | `itemHeight` | `14` | Item height in px. |
+| `dotSize` | `8` | Codex variant dot diameter in px. |
 | `scrollOffset` | `16` | Extra scroll offset when jumping to a turn in px. |
 
 ## Package layout

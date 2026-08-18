@@ -14,6 +14,7 @@ type TurnHistogramNavProps = PropsRuntime<'conversation.composer.dock'>
 interface TurnNavItem {
   readonly key: string
   readonly preview: string
+  readonly kind: string
 }
 
 /** Extract a plain-text preview from a user/steering message node. */
@@ -26,15 +27,21 @@ function previewOf(node: { content?: readonly { type?: string; text?: string }[]
     .trim()
 }
 
+/** Semantic dot color used by the Codex-style variant. */
+function dotColorFor(kind: string): string {
+  if (kind === 'user' || kind === 'steering') return '#3B82F6'
+  if (kind === 'assistant') return '#10B981'
+  if (kind === 'tool') return '#F59E0B'
+  return '#94A3B8'
+}
+
 /**
  * Turn histogram navigation rail.
  *
- * Unfocused items render as short bars. Hovering or keyboard-focusing an item
- * grows it into the longest bar and forms a wave across its neighbours via
- * CSS-only selectors, so the wave follows the pointer without React state.
- * The focused item also shows the user message text next to the rail.
- * No `title` attribute is rendered, so the browser's native delayed tooltip
- * never appears.
+ * `mixed` is the current production look: short bars with a CSS wave and a
+ * shared preview card. `deepseek` keeps the same dash language with a slightly
+ * more relaxed feel. `codex` switches to semantic dots without the wave.
+ * All variants share the same data source, click-to-scroll, and preview card.
  */
 export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
   const config = useSyncExternalStore(subscribeTurnNavConfig, getTurnNavConfig)
@@ -46,6 +53,7 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
     if (node?.kind !== 'user' && node?.kind !== 'steering') return []
     return [{
       key,
+      kind: node.kind,
       preview: previewOf(node.data as { content?: readonly { type?: string; text?: string }[] }),
     }]
   }), [order, nodeStore])
@@ -55,6 +63,7 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
   if (turns.length < config.minTurns) return null
 
   const activeIndex = activeKey === null ? -1 : turns.findIndex(turn => turn.key === activeKey)
+  const isCodex = config.variant === 'codex'
 
   const showPreview = (key: string): void => {
     setActiveKey(key)
@@ -103,6 +112,7 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
     '--turn-nav-preview-gap': `${config.previewGap}px`,
     '--turn-nav-item-width': `${config.itemWidth}px`,
     '--turn-nav-item-height': `${config.itemHeight}px`,
+    '--turn-nav-dot-size': `${config.dotSize}px`,
   } as CSSProperties
 
   // The rail has 4px top padding; center the single shared preview on the
@@ -112,7 +122,7 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
     : railPaddingTop + config.itemHeight / 2
 
   return (
-    <div className={css.host} style={style}>
+    <div className={css.host} style={style} data-variant={config.variant}>
       <nav
         className={css.rail}
         data-hide-narrow={config.hideOnNarrow ? 'true' : 'false'}
@@ -136,7 +146,11 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
               aria-label={`跳到第 ${index + 1} 轮`}
               onClick={() => { scrollToTurn(turn.key) }}
             >
-              <span className={css.bar} />
+              {isCodex ? (
+                <span className={css.dot} style={{ background: dotColorFor(turn.kind) }} />
+              ) : (
+                <span className={css.bar} />
+              )}
             </button>
           </div>
         ))}
