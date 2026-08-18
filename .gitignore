@@ -3,3 +3,10 @@ node_modules/
 *.log
 demo-frames/
 demo.gif
+
+# Local-only AI/development config (kept out of version control)
+AGENTS.md
+CLAUDE.md
+.github/copilot-instructions.md
+.cursor/
+NEXT.md
