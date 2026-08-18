@@ -1,7 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
+import type { CSSProperties } from 'react'
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: activates ui-conversation's SlotMap declaration for the dock slot.
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import {
+  getTurnNavConfig,
+  subscribeTurnNavConfig,
+} from '../config.ts'
 import css from './TurnHistogramNav.module.css'
 
 type TurnHistogramNavProps = PropsRuntime<'conversation.composer.dock'>
@@ -32,6 +37,7 @@ function previewOf(node: { content?: readonly { type?: string; text?: string }[]
  * never appears.
  */
 export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
+  const config = useSyncExternalStore(subscribeTurnNavConfig, getTurnNavConfig)
   const order = useSession(s => s.chat.order)
   const nodeStore = useSession(s => s.chat.nodes)
 
@@ -44,11 +50,10 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
     }]
   }), [order, nodeStore])
 
-  // Trial: show even with one user turn so it is easy to verify.
-  // TODO: restore the spec threshold (>=2) after the trial.
-  if (turns.length < 1) return null
-
   const [activeKey, setActiveKey] = useState<string | null>(null)
+
+  if (turns.length < config.minTurns) return null
+
   const activeIndex = activeKey === null ? -1 : turns.findIndex(turn => turn.key === activeKey)
 
   const showPreview = (key: string): void => {
@@ -72,7 +77,7 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
         const top = row.getBoundingClientRect().top
           - scroller.getBoundingClientRect().top
           + scroller.scrollTop
-        scroller.scrollTo({ top: Math.max(0, top - 16), behavior: 'smooth' })
+        scroller.scrollTo({ top: Math.max(0, top - config.scrollOffset), behavior: 'smooth' })
       } else {
         row.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
@@ -80,14 +85,37 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
     }
   }
 
-  // The rail has 4px top padding and each item is 14px tall with no gap.
-  // Center the single shared preview on the active item.
-  const previewTop = activeIndex >= 0 ? 11 + activeIndex * 14 : 11
+  const railPaddingTop = 4
+
+  // Drive the CSS from the effective config via custom properties. Defaults
+  // are also present in the stylesheet as fallbacks. Width animation (instead
+  // of scaleX) keeps the rounded end caps perfectly circular while the bar
+  // grows into the focused wave.
+  const style = {
+    '--turn-nav-bar-width': `${config.barWidth}px`,
+    '--turn-nav-focused-width': `${config.focusedBarWidth}px`,
+    '--turn-nav-adjacent-width': `${config.adjacentBarWidth}px`,
+    '--turn-nav-neighbor-width': `${config.neighborBarWidth}px`,
+    '--turn-nav-wave-transition': `${config.waveTransitionMs}ms`,
+    '--turn-nav-preview-width': `${config.previewWidth}px`,
+    '--turn-nav-preview-max-height': `${config.previewMaxHeight}px`,
+    '--turn-nav-rail-right': `${config.railOffsetRight}px`,
+    '--turn-nav-preview-gap': `${config.previewGap}px`,
+    '--turn-nav-item-width': `${config.itemWidth}px`,
+    '--turn-nav-item-height': `${config.itemHeight}px`,
+  } as CSSProperties
+
+  // The rail has 4px top padding; center the single shared preview on the
+  // active item using the configured item height.
+  const previewTop = activeIndex >= 0
+    ? railPaddingTop + activeIndex * config.itemHeight + config.itemHeight / 2
+    : railPaddingTop + config.itemHeight / 2
 
   return (
-    <div className={css.host}>
+    <div className={css.host} style={style}>
       <nav
         className={css.rail}
+        data-hide-narrow={config.hideOnNarrow ? 'true' : 'false'}
         aria-label="对话轮次导航"
         onMouseLeave={hidePreview}
         onBlur={(event) => {
@@ -112,15 +140,17 @@ export function TurnHistogramNav({ useSession }: TurnHistogramNavProps) {
             </button>
           </div>
         ))}
-        <div
-          className={activeKey === null ? css.preview : `${css.preview} ${css.visible}`}
-          role="tooltip"
-          aria-hidden={activeKey === null}
-          style={{ top: previewTop }}
-        >
-          <span className={css.previewIndex}>第 {activeIndex + 1} 轮</span>
-          {activeIndex >= 0 ? (turns[activeIndex]?.preview || '（无文本内容）') : ''}
-        </div>
+        {config.previewEnabled && (
+          <div
+            className={activeKey === null ? css.preview : `${css.preview} ${css.visible}`}
+            role="tooltip"
+            aria-hidden={activeKey === null}
+            style={{ top: previewTop }}
+          >
+            <span className={css.previewIndex}>第 {activeIndex + 1} 轮</span>
+            {activeIndex >= 0 ? (turns[activeIndex]?.preview || '（无文本内容）') : ''}
+          </div>
+        )}
       </nav>
     </div>
   )

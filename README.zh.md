@@ -30,12 +30,59 @@ dsh plugin --profile web install
 2. 将鼠标移到右侧导航轨上：指针所在条变长，相邻条形成波浪，左侧预览卡片平滑滑动到当前条并显示该轮你发送的消息。
 3. 点击任意条，平滑滚动到对应轮次。
 
-窄屏（`max-width: 767px`）下自动隐藏。
+窄屏（`max-width: 767px`）下默认自动隐藏；如需保留导航轨，可设置 `hideOnNarrow: false`。
+
+## 配置
+
+插件注册了 `dsh-turn-nav` 设置命名空间。修改 `$DSH_HOME/settings.yaml`（或 `settings.json`）即可覆盖默认值：
+
+```yaml
+dsh-turn-nav:
+  waveTransitionMs: 120
+  barWidth: 14
+  focusedBarWidth: 30
+  previewEnabled: true
+```
+
+也可以在浏览器控制台读取和更新当前生效配置：
+
+```js
+// 读取当前生效配置。
+dshTurnNav.getConfig()
+
+// 更新一个或多个字段（会通过 DSH settings 持久化）。
+dshTurnNav.updateConfig({ waveTransitionMs: 120 })
+
+// 清除所有用户覆盖，恢复默认值。
+dshTurnNav.resetConfig()
+```
+
+未配置的字段使用默认值。默认值保持原有短条质感，同时让聚焦波浪更柔和、更圆润。
+
+### 配置参数
+
+| 参数 | 默认值 | 说明 |
+| --- | ---: | --- |
+| `barWidth` | `12` | 未聚焦条宽（px）。 |
+| `focusedBarWidth` | `24` | 悬停/聚焦条宽（px）。 |
+| `adjacentBarWidth` | `16` | 第一相邻条宽（px）。 |
+| `neighborBarWidth` | `13` | 第二相邻条宽（px）。 |
+| `waveTransitionMs` | `100` | 波浪过渡时长（ms）。**数值越短，视觉越“硬”、越干脆；数值越长，视觉越“软”、越平滑。** |
+| `previewEnabled` | `true` | 是否显示消息预览卡片。 |
+| `previewWidth` | `240` | 预览卡片宽度（px）。 |
+| `previewMaxHeight` | `132` | 预览卡片最大高度（px），超出后隐藏溢出。 |
+| `minTurns` | `1` | 至少多少轮用户消息后显示导航轨。 |
+| `hideOnNarrow` | `true` | 窄屏（`max-width: 767px`）下是否隐藏导航轨。 |
+| `railOffsetRight` | `8` | 导航轨距右边缘距离（px）。 |
+| `previewGap` | `10` | 导航轨与预览卡片间距（px）。 |
+| `itemWidth` | `28` | 点击目标/条目宽度（px）。 |
+| `itemHeight` | `14` | 条目高度（px）。 |
+| `scrollOffset` | `16` | 点击跳转时的额外滚动偏移（px）。 |
 
 ## 目录结构
 
 - `lib/client.js` — 预构建的浏览器插件包（已提交，可直接使用）。
-- `lib/index.js` — node half（空的 `apply` 占位）。
+- `lib/index.js` — node half，注册 `dsh-turn-nav` 设置命名空间。
 - `src/` — 源代码，供参考。
 
 ## AI 制作提示

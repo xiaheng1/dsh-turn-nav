@@ -30,12 +30,59 @@ dsh plugin --profile web install
 2. Move the pointer over the right-edge rail: the bar under the pointer grows, adjacent bars form a wave, and a shared preview card smoothly slides to the active bar showing that turn's message.
 3. Click a bar to smooth-scroll to that turn.
 
-The rail hides on narrow screens (`max-width: 767px`).
+The rail hides on narrow screens (`max-width: 767px`) by default; set `hideOnNarrow: false` to keep it visible.
+
+## Configuration
+
+The plugin registers a `dsh-turn-nav` settings namespace. Edit `$DSH_HOME/settings.yaml` (or `settings.json`) to override defaults:
+
+```yaml
+dsh-turn-nav:
+  waveTransitionMs: 120
+  barWidth: 14
+  focusedBarWidth: 30
+  previewEnabled: true
+```
+
+You can also read and update the effective config from the browser console:
+
+```js
+// Read the currently effective config.
+dshTurnNav.getConfig()
+
+// Update one or more fields (persisted through DSH settings).
+dshTurnNav.updateConfig({ waveTransitionMs: 120 })
+
+// Clear all user overrides and return to defaults.
+dshTurnNav.resetConfig()
+```
+
+If a field is not configured, the default is used. The defaults keep the original short-bar feel while making the focused wave softer and rounder.
+
+### Configuration parameters
+
+| Parameter | Default | Description |
+| --- | ---: | --- |
+| `barWidth` | `12` | Resting bar width in px. |
+| `focusedBarWidth` | `24` | Hovered / focused bar width in px. |
+| `adjacentBarWidth` | `16` | First adjacent bar width in px. |
+| `neighborBarWidth` | `13` | Second adjacent bar width in px. |
+| `waveTransitionMs` | `100` | Wave transition duration in ms. **Shorter values feel harder/snappier; longer values feel softer/smoother.** |
+| `previewEnabled` | `true` | Whether the message preview card is shown. |
+| `previewWidth` | `240` | Preview card width in px. |
+| `previewMaxHeight` | `132` | Preview card maximum height in px before overflow is hidden. |
+| `minTurns` | `1` | Minimum number of user turns before the rail appears. |
+| `hideOnNarrow` | `true` | Hide the rail on narrow screens (`max-width: 767px`). |
+| `railOffsetRight` | `8` | Rail distance from the right edge in px. |
+| `previewGap` | `10` | Gap between the rail and the preview card in px. |
+| `itemWidth` | `28` | Click target / item width in px. |
+| `itemHeight` | `14` | Item height in px. |
+| `scrollOffset` | `16` | Extra scroll offset when jumping to a turn in px. |
 
 ## Package layout
 
 - `lib/client.js` — prebuilt browser plugin bundle (committed for direct use).
-- `lib/index.js` — node half (empty `apply` stub).
+- `lib/index.js` — node half; registers the `dsh-turn-nav` settings namespace.
 - `src/` — source code for reference.
 
 ## AI-generated notice

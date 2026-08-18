@@ -7,7 +7,7 @@
 .rail {
   position: fixed;
   top: 50%;
-  right: 8px;
+  right: var(--turn-nav-rail-right, 8px);
   transform: translateY(-50%);
   z-index: 1000;
   display: flex;
@@ -22,8 +22,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  width: 28px;
-  height: 14px;
+  width: var(--turn-nav-item-width, 28px);
+  height: var(--turn-nav-item-height, 14px);
 }
 
 /* The click target is wider than the visible bar, without a card background. */
@@ -31,8 +31,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  width: 28px;
-  height: 14px;
+  width: var(--turn-nav-item-width, 28px);
+  height: var(--turn-nav-item-height, 14px);
   padding: 0 2px;
   border: none;
   border-radius: 999px;
@@ -57,42 +57,39 @@
 
 /* Short bars at rest. */
 .bar {
-  width: 12px;
+  width: var(--turn-nav-bar-width, 12px);
   height: 4px;
   border-radius: 999px;
   background: var(--dsw-alias-label-tertiary);
   opacity: 0.55;
-  transform: scaleX(1);
-  transform-origin: right center;
-  will-change: transform;
+  will-change: width;
   transition:
-    transform 60ms ease-out,
-    opacity 60ms ease-out,
-    background 60ms ease-out;
+    width var(--turn-nav-wave-transition, 100ms) ease-out,
+    opacity var(--turn-nav-wave-transition, 100ms) ease-out,
+    background var(--turn-nav-wave-transition, 100ms) ease-out;
 }
 
 /* CSS-only wave: hovered item longest, adjacent items progressively shorter.
-   Uses transform scaleX instead of width so the browser can animate on the
-   compositor thread and keep the wave responsive while sweeping the rail. */
+   Width animation preserves the circular end caps, so the focused bar stays
+   as rounded and smooth as the resting bar while it grows. */
 .item:hover .bar,
 .item:focus-within .bar {
-  transform: scaleX(2.1667); /* 26 / 12 */
+  width: var(--turn-nav-focused-width, 24px);
   background: var(--dsw-alias-state-business-primary);
   opacity: 1;
 }
 
 .item:has(+ .item:hover) .bar,
 .item:hover + .item .bar {
-  transform: scaleX(1.4167); /* 17 / 12 */
+  width: var(--turn-nav-adjacent-width, 16px);
   opacity: 0.85;
 }
 
 .item:has(+ .item + .item:hover) .bar,
 .item:hover + .item + .item .bar {
-  transform: scaleX(1.0833); /* 13 / 12 */
+  width: var(--turn-nav-neighbor-width, 13px);
   opacity: 0.7;
 }
-
 
 /* Single shared preview card: slides vertically to follow the active item.
    It stays mounted while the pointer is on the rail, so moving between items
@@ -100,10 +97,10 @@
 .preview {
   position: absolute;
   top: 0;
-  right: calc(100% + 10px);
+  right: calc(100% + var(--turn-nav-preview-gap, 10px));
   transform: translateY(-50%);
-  width: 240px;
-  max-height: 132px;
+  width: var(--turn-nav-preview-width, 240px);
+  max-height: var(--turn-nav-preview-max-height, 132px);
   overflow: hidden;
   box-sizing: border-box;
   padding: 8px 10px;
@@ -137,7 +134,7 @@
 }
 
 @media (max-width: 767px) {
-  .rail {
+  .rail[data-hide-narrow="true"] {
     display: none;
   }
 }
