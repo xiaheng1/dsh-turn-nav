@@ -17,6 +17,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   DEFAULT_TURN_NAV_CONFIG,
   TURN_NAV_NAMESPACE,
+  applyTurnNavConfig,
   getTurnNavConfig,
   setTurnNavConfig,
   type TurnNavConfig,
@@ -61,11 +62,15 @@ export function apply(ctx: ClientContext): void {
   const service: TurnNavClient = {
     getConfig: () => getTurnNavConfig(),
     async updateConfig(patch) {
+      // Update the local effective config immediately so the console API works
+      // even when the DSH settings namespace is not exposed to this client yet.
+      applyTurnNavConfig(patch)
       for (const [field, value] of Object.entries(patch)) {
         await scope.set(field, value)
       }
     },
     async resetConfig() {
+      setTurnNavConfig(DEFAULT_TURN_NAV_CONFIG)
       for (const field of Object.keys(DEFAULT_TURN_NAV_CONFIG)) {
         await scope.unset(field)
       }
