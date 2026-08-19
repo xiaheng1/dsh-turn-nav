@@ -4,7 +4,7 @@ English | [中文](README.zh.md)
 
 > ⚠️ **AI-generated notice**: This plugin was AI-assisted. Test it in a safe environment before production use.
 
-Codex-style turn histogram navigation rail for DeepSeek Harness Web.
+Turn histogram navigation rail for DeepSeek Harness Web with mixed, DeepSeek, and Codex visual variants.
 
 Unfocused turns render as short bars on the right edge of the conversation. Hovering or keyboard-focusing a bar grows it into a wave (the focused bar is longest) and shows a preview card with the message you sent in that turn. While sweeping along the rail, the preview card stays visible and smoothly slides to the active bar, showing that turn's message text. Clicking a bar smooth-scrolls the conversation to that turn.
 
