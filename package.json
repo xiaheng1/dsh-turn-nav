@@ -1,8 +1,8 @@
 {
   "name": "dsh-turn-nav",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "packageManager": "pnpm@11.21.0",
-  "description": "Codex-style turn histogram navigation rail for DeepSeek Harness Web. Hover shows a wave of bars and a preview of your message; click jumps to that turn. Visual behavior is configurable through DSH settings.",
+  "description": "Turn histogram navigation rail for DeepSeek Harness Web with mixed, DeepSeek, and Codex visual variants. Hover/focus reveals a wave or highlight and a message preview; click jumps to that turn. Visual behavior is configurable through DSH settings.",
   "type": "module",
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
@@ -63,6 +63,7 @@
     "url": "https://github.com/xiaheng1/dsh-turn-nav/issues"
   },
   "scripts": {
+    "build": "node build.mjs",
     "record:demo": "node scripts/record-demo.mjs",
     "make:gif": "python scripts/make-gif.py demo-frames demo.gif --duration 30",
     "demo:mouse": "python scripts/mouse-demo.py"

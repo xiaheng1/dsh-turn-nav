@@ -15,10 +15,10 @@ import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 // Type-only: pulls the settingsScope Context merge (ctx.settingsScope).
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
-  DEFAULT_TURN_NAV_CONFIG,
   TURN_NAV_NAMESPACE,
   applyTurnNavConfig,
   getTurnNavConfig,
+  resetTurnNavConfig,
   setTurnNavConfig,
   type TurnNavConfig,
 } from '../config.ts'
@@ -62,18 +62,17 @@ export function apply(ctx: ClientContext): void {
   const service: TurnNavClient = {
     getConfig: () => getTurnNavConfig(),
     async updateConfig(patch) {
-      // Update the local effective config immediately so the console API works
-      // even when the DSH settings namespace is not exposed to this client yet.
+      // Update the local effective config only. Writing back through
+      // `scope.set` would double-broadcast (the settings scope already
+      // re-emits the merged value on change) and, in sessions where no
+      // settings panel has mounted, the host side of that write throws
+      // (`reading 'shortcuts'`) because its settings UI is not ready. The
+      // console API therefore stays purely local; persistence comes from the
+      // settings namespace/document, not from re-writing here.
       applyTurnNavConfig(patch)
-      for (const [field, value] of Object.entries(patch)) {
-        await scope.set(field, value)
-      }
     },
     async resetConfig() {
-      setTurnNavConfig(DEFAULT_TURN_NAV_CONFIG)
-      for (const field of Object.keys(DEFAULT_TURN_NAV_CONFIG)) {
-        await scope.unset(field)
-      }
+      resetTurnNavConfig()
     },
   }
   ctx.reflect.provide('turnNav', service)

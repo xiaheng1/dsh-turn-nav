@@ -17,6 +17,20 @@
   padding: 4px 2px;
 }
 
+/* The tick column keeps the item stack in one wrapper. It is the element
+   that carries the Codex top fade, so the fade never clips the preview card
+   (which is a sibling of this column inside the unmasked rail). */
+.tickColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.host:not([data-variant="deepseek"]):not([data-variant="codex"]) .tickColumn,
+.host[data-variant="mixed"] .tickColumn {
+  align-items: flex-end;
+}
+
 .item {
   position: relative;
   display: flex;
@@ -50,79 +64,405 @@
   outline: none;
 }
 
-.lineButton:focus-visible .bar {
-  background: var(--dsw-alias-state-business-primary);
-  opacity: 1;
-}
-
-/* Short bars at rest. */
+/* Base bar: only transitions. Shape/color are defined per variant below.
+   `flex-shrink: 0` is load-bearing: the bar is a flex item inside the
+   `.lineButton` click target (30px wide), and without it the flexbox would
+   shrink the bar down to the button's content box, clipping the long focused
+   tick (e.g. codex 50px) down to ~22px. */
 .bar {
-  width: var(--turn-nav-bar-width, 12px);
-  height: 4px;
+  display: block;
+  flex-shrink: 0;
   border-radius: 999px;
-  background: var(--dsw-alias-label-tertiary);
-  opacity: 0.55;
-  will-change: width;
+  will-change: width, opacity, background;
   transition:
     width var(--turn-nav-wave-transition, 100ms) ease-out,
     opacity var(--turn-nav-wave-transition, 100ms) ease-out,
     background var(--turn-nav-wave-transition, 100ms) ease-out;
 }
 
+/* ===================================================================
+   Mixed variant (default): short bars with a CSS wave and a shared
+   preview card on the left.
+   =================================================================== */
+
+.host:not([data-variant="deepseek"]):not([data-variant="codex"]) .bar,
+.host[data-variant="mixed"] .bar {
+  width: var(--turn-nav-bar-width, 12px);
+  height: 4px;
+  background: var(--dsw-alias-label-tertiary, rgb(129, 133, 140));
+  opacity: 0.55;
+}
+
 /* CSS-only wave: hovered item longest, adjacent items progressively shorter.
    Width animation preserves the circular end caps, so the focused bar stays
    as rounded and smooth as the resting bar while it grows. */
-.item:hover .bar,
-.item:focus-within .bar {
+.host:not([data-variant="deepseek"]):not([data-variant="codex"]) .item:hover .bar,
+.host:not([data-variant="deepseek"]):not([data-variant="codex"]) .item:focus-within .bar,
+.host[data-variant="mixed"] .item:hover .bar,
+.host[data-variant="mixed"] .item:focus-within .bar {
   width: var(--turn-nav-focused-width, 24px);
-  background: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-state-business-primary, rgb(77, 107, 250));
   opacity: 1;
 }
 
-.item:has(+ .item:hover) .bar,
-.item:hover + .item .bar {
+.host:not([data-variant="deepseek"]):not([data-variant="codex"]) .item:has(+ .item:hover) .bar,
+.host:not([data-variant="deepseek"]):not([data-variant="codex"]) .item:hover + .item .bar,
+.host[data-variant="mixed"] .item:has(+ .item:hover) .bar,
+.host[data-variant="mixed"] .item:hover + .item .bar {
   width: var(--turn-nav-adjacent-width, 16px);
   opacity: 0.85;
 }
 
-.item:has(+ .item + .item:hover) .bar,
-.item:hover + .item + .item .bar {
+.host:not([data-variant="deepseek"]):not([data-variant="codex"]) .item:has(+ .item + .item:hover) .bar,
+.host:not([data-variant="deepseek"]):not([data-variant="codex"]) .item:hover + .item + .item .bar,
+.host[data-variant="mixed"] .item:has(+ .item + .item:hover) .bar,
+.host[data-variant="mixed"] .item:hover + .item + .item .bar {
   width: var(--turn-nav-neighbor-width, 13px);
   opacity: 0.7;
 }
 
-/* Codex-style dots: no wave chain, only a single dot highlight. */
-.dot {
-  width: var(--turn-nav-dot-size, 8px);
-  height: var(--turn-nav-dot-size, 8px);
-  border-radius: 50%;
-  opacity: 0.85;
-  transition:
-    transform var(--turn-nav-wave-transition, 100ms) ease-out,
-    opacity var(--turn-nav-wave-transition, 100ms) ease-out;
+/* ===================================================================
+   DeepSeek variant: a single turn-list that doubles as the rail, calibrated
+   to the real DSH session quick-nav (measured on the live page).
+   - The container (`.rail`) is the 34px dash column. A frosted `.pill` fills
+     it as the resting backdrop.
+   - `.panel` is the same list at full width at all times: while collapsed it
+     is transparent (only the pill + the right-hand dashes show) and hovering
+     fades it to the white bordered card via background/shadow transitions —
+     no width jump, so collapsing is a true fade-out.
+   - One list renders every turn once; dashes and card rows are the same rows
+     and line up 1:1. The current turn (scroll-tracked) stays marked on its
+     dash; clicking the collapsed column jumps to it.
+   - Container: fixed at the right edge (right offset measured to clear the
+     conversation scrollbar), vertically centred.
+   =================================================================== */
+
+.host[data-variant="deepseek"] .rail {
+  position: fixed;
+  /* Measured right offset keeps the rail to the left of the conversation
+     column's own scrollbar; falls back to the configured offset. */
+  right: var(--turn-nav-rail-right-measured, var(--turn-nav-rail-right, 16px));
+  width: var(--turn-nav-item-width, 34px);
+  align-items: flex-end;
+  padding: 0;
+  cursor: pointer;
 }
 
-.item:hover .dot,
-.item:focus-within .dot {
-  transform: scale(1.2);
-  opacity: 1;
-}
-
-/* DeepSeek-style variant: keep the same dash language but slightly thinner
-   and more transparent at rest for a softer histogram feel. */
 .host[data-variant="deepseek"] .bar {
-  height: 3px;
-  opacity: 0.45;
+  width: 8px;
+  height: 2px;
+  flex-shrink: 0;
+  margin-right: 11px; /* dash 11px from the card's right edge (measured) */
+  border-radius: 4px;
+  background: var(--turn-nav-color-bar, var(--dsw-alias-border-l4, rgba(0, 0, 0, 0.16)));
+  opacity: 1;
+  transition: background-color 0.2s;
 }
 
-.host[data-variant="deepseek"] .item:hover .bar,
-.host[data-variant="deepseek"] .item:focus-within .bar {
+/* The resting frosted pill behind the dash column. Sits under `.panel`, so
+   the expanded card (opaque) covers it. */
+.pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0; /* under .panel */
+  border-radius: 16px;
+  background: var(--turn-nav-color-backdrop, rgba(255, 255, 255, 0.8));
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  pointer-events: none;
+}
+
+/* The card face: keeps its full content width at all times. Collapsed it is
+   transparent (only the pill shows through the dash column); hovering fades
+   it to the white bordered card. No width animation — collapsing is a
+   background/shadow fade, exactly like the real quick-nav. */
+.panel {
+  position: relative;
+  z-index: 1; /* sit above the frosted .pill in both states */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: var(--turn-nav-preview-width, 240px);
+  max-height: var(--turn-nav-rail-max-height, 300px);
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.panel.panelOpen {
+  border-color: var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.16));
+  background: var(--turn-nav-color-panel-bg, var(--dsw-alias-bg-base, #ffffff));
+  box-shadow: var(--dsw-shadow-lv2, 0 2px 8px rgba(0, 0, 0, 0.12));
+  pointer-events: auto;
+}
+
+/* The scrollable list body: carries the content padding and the top/bottom
+   fade. The visible scrollbar is fully suppressed (see the rules below) so
+   the OS-native chunky scrollbar never shows or steals width; the fade hints
+   that the list scrolls. Its max-height matches the card, so the card clips
+   (rounded corners) what the body scrolls. */
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+  max-height: var(--turn-nav-rail-max-height, 300px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 15px 0 15px 24px;
+  scrollbar-width: none; /* Firefox: no scrollbar */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 16px,
+    black calc(100% - 16px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 16px,
+    black calc(100% - 16px),
+    transparent 100%
+  );
+}
+
+/* Hide the scrollbar entirely (WebKit/Chromium). A zero-width scrollbar
+   takes no layout space, so dash positions are identical in every state and
+   the card edge is never covered. Scrolling still works. */
+.panelBody::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.panelBody::-webkit-scrollbar-button,
+.panelBody::-webkit-scrollbar-track,
+.panelBody::-webkit-scrollbar-track-piece,
+.panelBody::-webkit-scrollbar-thumb,
+.panelBody::-webkit-scrollbar-corner {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: none;
+}
+
+/* One turn row: preview text on the left, its dash on the right. Row pitch
+   matches the real quick-nav: 30px (20px text line + 5px top/bottom). */
+.panelRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: right;
+}
+
+/* Collapsed: rows are inert (the column itself is the click target) and the
+   preview text is hidden — only the dashes paint. */
+.panel:not(.panelOpen) .panelRow {
+  pointer-events: none;
+}
+
+.panel:not(.panelOpen) .panelText {
+  opacity: 0;
+}
+
+.panelText {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--turn-nav-color-text, rgb(129, 133, 140)); /* #81858C */
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: opacity 0.1s, color 0.2s;
+}
+
+/* Current row's dash and text are blue: the scroll-tracked read position.
+   Declared before the hover/focus rules, which override it (near-black) at
+   equal specificity. */
+.host[data-variant="deepseek"] .panelRowCurrent .bar {
+  background: var(--turn-nav-color-bar-active, rgb(77, 107, 250));
+}
+
+.host[data-variant="deepseek"] .panelRowCurrent .panelText {
+  color: var(--turn-nav-color-bar-active, rgb(77, 107, 250));
+}
+
+.host[data-variant="deepseek"] .panelRowActive .panelText,
+.host[data-variant="deepseek"] .panelRow:hover .panelText,
+.host[data-variant="deepseek"] .panelRow:focus-visible .panelText {
+  color: var(--turn-nav-color-text-active, rgb(15, 17, 21));
+}
+
+/* Hovered row: near-black dash. Declared after the current-row rule, so
+   hovering the current row (which is also .panelRow) flips it black too. */
+.host[data-variant="deepseek"] .panelRowActive .bar,
+.host[data-variant="deepseek"] .panelRow:hover .bar,
+.host[data-variant="deepseek"] .panelRow:focus-visible .bar {
+  background: var(--turn-nav-color-bar-hover, rgb(15, 17, 21));
+}
+
+.panelRow:focus-visible {
+  outline: none;
+}
+
+/* ===================================================================
+   Side overrides (config.position). `default` resolves to the variant's
+   natural side; these flip the rail and its pop-outs when forced.
+   =================================================================== */
+
+/* Forced left: rail hugs the left edge, panel/preview flip to the right. */
+.host[data-side="left"] .rail {
+  right: auto;
+  left: var(--turn-nav-rail-left, 12px);
+}
+
+/* DeepSeek's card is a flex item right-aligned inside the rail; on the left
+   it must open to the right instead. */
+.host[data-variant="deepseek"][data-side="left"] .rail {
+  align-items: flex-start;
+}
+
+/* Forced right: codex's natural left side flips back to the right. */
+.host[data-variant="codex"][data-side="right"] .rail {
+  left: auto;
+  right: var(--turn-nav-rail-right, 8px);
+}
+
+/* ===================================================================
+   Codex variant: dense left-hand tick rail.
+   - Rest: tiny grey ticks, very tight spacing, top/bottom edge fade.
+   - Hover: black tick, slightly longer.
+   - Focus: darker grey/black tick, slightly longer.
+   - Preview card pops out on the right.
+   - The rail hugs the conversation column's left edge. The DSH sidebar is
+     draggable (264–420px) and collapses to a 56px rail (auto below 1024px),
+     so the offset is measured at runtime and passed in as
+     `--turn-nav-rail-left`; 280px is only the pre-measure fallback.
+   =================================================================== */
+
+.host[data-variant="codex"] .rail {
+  right: auto;
+  /* The tick's left edge sits ~15px inside the conversation column's left
+     edge (measured 14.7 light / 16.5 dark); the 4px button padding brings it
+     the rest of the way after this +11px offset. */
+  left: calc(var(--turn-nav-rail-left, 280px) + 11px);
+  align-items: flex-start;
+  padding: 4px 0;
+}
+
+.host[data-variant="codex"] .tickColumn {
+  align-items: flex-start;
+  /* The box must span the focused tick's full overflow (4px button padding +
+     focused width), otherwise the mask below clips the bar past the 30px item
+     — the wave looked cut off. Sized off the focused width so it follows
+     config; the rail widens to match, shifting the preview card clear of the
+     bar. */
+  width: calc(var(--turn-nav-focused-width, 26px) + 6px);
+  /* Top fade over ~2 rows (2 × 10px pitch); the Codex rail has no bottom fade. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 20px,
+    black 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 20px,
+    black 100%
+  );
+}
+
+.host[data-variant="codex"] .item {
+  justify-content: flex-start;
+  width: var(--turn-nav-item-width, 30px);
+  height: var(--turn-nav-item-height, 10px);
+}
+
+.host[data-variant="codex"] .lineButton {
+  justify-content: flex-start;
+  width: var(--turn-nav-item-width, 30px);
+  height: var(--turn-nav-item-height, 10px);
+  padding: 0 4px;
+  /* The real Codex rail keeps the default arrow cursor; ticks do not look or
+     behave like buttons. */
+  cursor: default;
+}
+
+.host[data-variant="codex"] .bar {
+  width: var(--turn-nav-bar-width, 6px);
+  height: var(--turn-nav-dot-size, 2px);
+  border-radius: 1px;
+  /* Resting grey measured from the Codex client rail: light rgb(210,211,211),
+     dark rgb(70,70,70) — see the dark block at the end of the file. */
+  background: var(--turn-nav-color-bar, rgb(210, 211, 211));
   opacity: 1;
 }
 
-/* Single shared preview card: slides vertically to follow the active item.
+/* Codex wave: hovering/focusing a tick lengthens it plus the three ticks on
+   each side — 7 ticks in total — and turns only the hovered tick into the
+   theme's strongest foreground (near-black in light, near-white in dark).
+   Neighbours keep the resting grey and only change length, so the rail reads
+   as a soft length-taper around the pointer. Widths cross-validated from the
+   real Codex client rail (2026-08, light 150% / dark 200% screenshots):
+   resting 6, wave 26 / 20 / 14 / 10; every tick is 2px tall. */
+.host[data-variant="codex"] .item:hover .bar,
+.host[data-variant="codex"] .item:focus-within .bar {
+  width: var(--turn-nav-focused-width, 26px);
+  height: 2px;
+  background: var(--turn-nav-color-bar-hover, rgb(26, 28, 31));
+  opacity: 1;
+}
+
+/* ±1 tick: 20px (rest grey, length only) */
+.host[data-variant="codex"] .item:has(+ .item:hover) .bar,
+.host[data-variant="codex"] .item:hover + .item .bar {
+  width: var(--turn-nav-adjacent-width, 20px);
+}
+
+/* ±2 tick: 14px */
+.host[data-variant="codex"] .item:has(+ .item + .item:hover) .bar,
+.host[data-variant="codex"] .item:hover + .item + .item .bar {
+  width: var(--turn-nav-neighbor-width, 14px);
+}
+
+/* ±3 tick: 10px */
+.host[data-variant="codex"] .item:has(+ .item + .item + .item:hover) .bar,
+.host[data-variant="codex"] .item:hover + .item + .item + .item .bar {
+  width: 10px;
+}
+
+/* Clicked / current tick: persistent near-black marker, same colour as the
+   hovered tick (measured from the real client). Only the colour changes —
+   the resting length stays. Hover/focus rules above still win at equal
+   specificity, so sweeping the rail keeps the wave visible. */
+.host[data-variant="codex"] .itemCurrent .bar {
+  background: var(--turn-nav-color-bar-hover, rgb(26, 28, 31));
+}
+
+/* ===================================================================
+   Single shared preview card: slides vertically to follow the active item.
    It stays mounted while the pointer is on the rail, so moving between items
-   smoothly transitions position and swaps the text instead of flickering. */
+   smoothly transitions position and swaps the text instead of flickering.
+   =================================================================== */
+
 .preview {
   position: absolute;
   top: 0;
@@ -133,11 +473,11 @@
   overflow: hidden;
   box-sizing: border-box;
   padding: 8px 10px;
-  border: 1px solid var(--dsw-alias-border-l2);
+  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));
   border-radius: 10px;
-  background: var(--dsw-alias-bg-base);
-  box-shadow: var(--dsw-shadow-lv2);
-  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-base, #ffffff);
+  box-shadow: var(--dsw-shadow-lv2, 0 2px 8px rgba(0, 0, 0, 0.08));
+  color: var(--dsw-alias-label-primary, rgb(15, 17, 21));
   font-size: 12px;
   line-height: 18px;
   white-space: pre-wrap;
@@ -153,17 +493,157 @@
   opacity: 1;
 }
 
+/* 首次展开/收起瞬间：禁用 top 过渡，卡片直接在目标行位置生成/消失，
+   避免从 rail 顶部飞入飞出；已展开后的行间切换仍平滑滑动。 */
+.preview.noTopTransition {
+  transition: opacity 80ms ease;
+}
+
 .previewIndex {
   display: block;
   margin-bottom: 2px;
-  color: var(--dsw-alias-label-caption);
+  color: var(--dsw-alias-label-caption, rgb(151, 157, 166));
   font-size: 11px;
   font-weight: 500;
   line-height: 16px;
+}
+
+/* Codex places the rail on the left, so the preview flips to the right. */
+.host[data-variant="codex"] .preview {
+  right: auto;
+  left: calc(100% + var(--turn-nav-preview-gap, 10px));
+  /* Measured from the real Codex client card (dark 200% screenshot, physical
+     px ÷2): 642→321px wide, 20→10px gap, vertically centred on the hovered
+     tick. Pure surface — no border; light mode is white + soft shadow, dark
+     mode is flat rgb(44,44,44) with no shadow (dark block below). */
+  width: var(--turn-nav-preview-width, 321px);
+  padding: 13px 10px;
+  border: none;
+  background: #ffffff;
+  box-shadow: var(--dsw-shadow-lv2, 0 2px 8px rgba(0, 0, 0, 0.08));
+  color: var(--dsw-alias-label-caption, rgb(151, 157, 166));
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* Codex card line 1 = the user's message, coloured like the focused tick
+   (near-black light / near-white dark) so it reads as the active turn. It is
+   clipped to a single line with an ellipsis. */
+.host[data-variant="codex"] .previewIndex {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-bottom: 0;
+  color: var(--turn-nav-color-bar-hover, rgb(26, 28, 31));
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+/* Codex card line 2+ = the assistant's reply, in the resting grey. */
+.host[data-variant="codex"] .previewBody {
+  display: block;
+  color: var(--dsw-alias-label-caption, rgb(151, 157, 166));
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* Position override: the preview always pops out on the side opposite the
+   rail, whichever side that is. */
+.host[data-side="left"] .preview {
+  right: auto;
+  left: calc(100% + var(--turn-nav-preview-gap, 10px));
+}
+
+.host[data-side="right"] .preview {
+  left: auto;
+  right: calc(100% + var(--turn-nav-preview-gap, 10px));
 }
 
 @media (max-width: 767px) {
   .rail[data-hide-narrow="true"] {
     display: none;
   }
+}
+
+/* ===================================================================
+   DeepSeek 深色主题适配（跟随 DSH 应用主题，非系统 prefers-color-scheme）。
+   dsTheme 由组件读取 --dsw-alias-label-primary 的解析值判定，host 打上
+   data-tn-theme 属性。上方全部浅色规则保持不动；此块特异性高于对应浅色
+   规则且位于末尾，深色下必然生效。`--turn-nav-color-*` 用户覆盖仍优先。
+     深色实测（视口 1432×768）：
+       pill 底衬   rgba(21,21,23,0.6) + blur(5px)
+       dash REST   rgba(255,255,255,0.2)
+       行文本 REST rgb(173,178,184)
+       active 文本/dash  rgb(249,250,251)
+       面板       rgb(35,35,36)
+       面板阴影   0 0 1px rgba(0,0,0,0.2), 0 0 4px rgba(0,0,0,0.02),
+                  0 12px 32px rgba(0,0,0,0.08)
+   =================================================================== */
+
+.host[data-variant="deepseek"][data-tn-theme="dark"] .bar {
+  background: var(--turn-nav-color-bar, rgba(255, 255, 255, 0.2));
+}
+
+.host[data-variant="deepseek"][data-tn-theme="dark"] .pill {
+  background: var(--turn-nav-color-backdrop, rgba(21, 21, 23, 0.6));
+}
+
+.host[data-variant="deepseek"][data-tn-theme="dark"] .panel.panelOpen {
+  background: var(--turn-nav-color-panel-bg, rgb(35, 35, 36));
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.2), 0 0 4px rgba(0, 0, 0, 0.02), 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.host[data-variant="deepseek"][data-tn-theme="dark"] .panelText {
+  color: var(--turn-nav-color-text, rgb(173, 178, 184));
+}
+
+.host[data-variant="deepseek"][data-tn-theme="dark"] .panelRowActive .panelText,
+.host[data-variant="deepseek"][data-tn-theme="dark"] .panelRow:hover .panelText,
+.host[data-variant="deepseek"][data-tn-theme="dark"] .panelRow:focus-visible .panelText {
+  color: var(--turn-nav-color-text-active, rgb(249, 250, 251));
+}
+
+.host[data-variant="deepseek"][data-tn-theme="dark"] .panelRowActive .bar,
+.host[data-variant="deepseek"][data-tn-theme="dark"] .panelRow:hover .bar,
+.host[data-variant="deepseek"][data-tn-theme="dark"] .panelRow:focus-visible .bar {
+  background: var(--turn-nav-color-bar-hover, rgb(249, 250, 251));
+}
+
+/* ===================================================================
+   Codex 深色主题适配（跟随 DSH 应用主题，非系统 prefers-color-scheme）。
+   dsTheme 由组件读取 --dsw-alias-label-primary 的解析值判定，host 打上
+   data-tn-theme 属性。与浅色逻辑一致——仅中心条变色，其余刻度保持灰色
+   只变长度。`--turn-nav-color-*` 用户覆盖仍优先。
+     深色实测（200% 截图换算，物理像素 ÷2）：
+       静止/邻居刻度  rgb(70,70,70)
+       中心条（悬停）  rgb(223,223,223)
+   =================================================================== */
+
+.host[data-variant="codex"][data-tn-theme="dark"] .bar {
+  background: var(--turn-nav-color-bar, rgb(70, 70, 70));
+}
+
+.host[data-variant="codex"][data-tn-theme="dark"] .item:hover .bar,
+.host[data-variant="codex"][data-tn-theme="dark"] .item:focus-within .bar {
+  background: var(--turn-nav-color-bar-hover, rgb(223, 223, 223));
+}
+
+.host[data-variant="codex"][data-tn-theme="dark"] .itemCurrent .bar {
+  background: var(--turn-nav-color-bar-hover, rgb(223, 223, 223));
+}
+
+.host[data-variant="codex"][data-tn-theme="dark"] .preview {
+  background: var(--turn-nav-color-panel-bg, rgb(44, 44, 44));
+  box-shadow: none;
+  color: rgb(148, 149, 150);
+}
+
+.host[data-variant="codex"][data-tn-theme="dark"] .previewIndex {
+  color: rgb(223, 223, 223);
+}
+
+.host[data-variant="codex"][data-tn-theme="dark"] .previewBody {
+  color: rgb(148, 149, 150);
 }
