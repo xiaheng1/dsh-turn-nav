@@ -10,3 +10,8 @@ CLAUDE.md
 .github/copilot-instructions.md
 .cursor/
 NEXT.md
+.workbuddy/
+
+# Local measurement artifacts and one-off probes
+tmp/
+scripts/probe-codex.mjs
